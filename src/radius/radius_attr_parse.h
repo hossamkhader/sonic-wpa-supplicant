@@ -224,6 +224,8 @@
 /*
  ** Microsoft vendor specific attribute
 */
+#define RADIUS_VENDOR_ID_NVIDIA                        5703
+#define RADIUS_VENDOR_ATTR_NVIDIA_USER_TENANT_ID       1
 #define RADIUS_VENDOR_ID_MICROSOFT                      311
 #if 0
 #define RADIUS_VENDOR_ATTR_MS_MPPE_SEND_KEY             16
@@ -514,6 +516,8 @@ typedef struct attrInfo_s
   unsigned int   vlanId; /* parsed VLAN id from vlan string */
   unsigned int   attrFlags;
   unsigned int   vlanAttrFlags;
+  unsigned int   tenantId;
+  bool           tenantIdPresent;
   bool     rcvdEapAttr;
 }attrInfo_t;
 
@@ -664,6 +668,7 @@ typedef struct radiusAttrParseFnMap_s
 }radiusAttrParseFnMap_t;
 
 int radiusVendorAttrGet(radiusAttr_t *radiusAttr, attrInfo_t *attrInfo);
+int radiusNvidiaTenantIdAttrGet(radiusAttr_t *radiusAttr, attrInfo_t *attrInfo);
 
 int radiusClientAcceptProcess(void *msg, attrInfo_t *attrInfo);
 int radiusClientChallengeProcess(void *radiusMsg, challenge_info_t *get_data);

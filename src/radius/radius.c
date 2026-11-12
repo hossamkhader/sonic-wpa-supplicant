@@ -1825,6 +1825,10 @@ int radiusClientAcceptProcess(void *radiusMsg, attrInfo_t *attrInfo)
     return -1;
   }
 
+  /* Tenant ID belongs to this Access-Accept only; do not reuse it on reauth. */
+  attrInfo->tenantId = 0;
+  attrInfo->tenantIdPresent = false;
+
   if (0 == attrInfo->attrFlags)
   {
     attrInfo->terminationAction = TERMINATION_ACTION_DEFAULT;
@@ -1841,6 +1845,13 @@ int radiusClientAcceptProcess(void *radiusMsg, attrInfo_t *attrInfo)
 	for (i = 0; i < msg->attr_used; i++)
 	{
 		radiusAttr = (radiusAttr_t *)radius_get_attr_hdr(msg, i);
+
+        if (radiusAttr->type == RADIUS_ATTR_TYPE_VENDOR)
+        {
+          if (radiusNvidiaTenantIdAttrGet(radiusAttr, attrInfo) != 0)
+            return -1;
+          continue;
+        }
 
 		if (0 == radiusAttrMapEntryGet(radiusAttr->type, &fn))
 		{
