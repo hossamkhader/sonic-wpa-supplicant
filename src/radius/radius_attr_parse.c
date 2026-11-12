@@ -274,6 +274,39 @@ int radiusAttrChallengeCopy(radiusAttr_t *radiusAttr, challenge_info_t *get_data
   return 0;
 }
 
+/* NVIDIA dictionary entry: VENDOR Nvidia 5703, attribute 1, integer. */
+int radiusNvidiaTenantIdAttrGet(radiusAttr_t *radiusAttr, attrInfo_t *attrInfo)
+{
+  const unsigned char *value;
+  unsigned int vendorId;
+  unsigned int tenantId;
+
+  RADIUS_IF_NULLPTR_RETURN(radiusAttr);
+  RADIUS_IF_NULLPTR_RETURN(attrInfo);
+
+  /* One uint32 VSA is 2-byte RADIUS header + 4-byte vendor ID +
+   * 1-byte vendor type + 1-byte vendor length + 4-byte integer. */
+  if (radiusAttr->length < sizeof(radiusAttr_t) + 6)
+    return -1;
+
+  value = (const unsigned char *)radiusAttr + sizeof(radiusAttr_t);
+  memcpy(&vendorId, value, sizeof(vendorId));
+  if (ntohl(vendorId) != RADIUS_VENDOR_ID_NVIDIA)
+    return 0;
+
+  if (value[4] != RADIUS_VENDOR_ATTR_NVIDIA_USER_TENANT_ID)
+    return 0;
+
+  if (radiusAttr->length != sizeof(radiusAttr_t) + 10 ||
+      value[5] != 6 || attrInfo->tenantIdPresent)
+    return -1;
+
+  memcpy(&tenantId, value + 6, sizeof(tenantId));
+  attrInfo->tenantId = ntohl(tenantId);
+  attrInfo->tenantIdPresent = true;
+  return 0;
+}
+
 int radiusAttrMapEntryGet(unsigned int attrType, radiusAttrParseFn_t *fn)
 {
   static radiusAttrParseFnMap_t radiusAttrMapTbl[] = {
